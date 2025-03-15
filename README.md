@@ -1,6 +1,6 @@
 # App Icons Generator
 
-Set of shell scripts which aim to generate iOS / macOS / Android / Android TV app icons easier and simply.
+Set of shell scripts which aim to generate **iOS** / **macOS** / **Android** / **Android TV** app icons easier and simply.
 
 ## Usage
 
@@ -13,7 +13,7 @@ brew install imagemagick
 2. Clone and chmod
 
 ```sh
-git clone https://github.com/andreyugolnik/icon-generator.git
+git clone https://github.com/reybits/icon-generator.git
 cd icon-generator
 chmod 777 *.sh
 ```
