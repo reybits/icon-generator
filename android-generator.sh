@@ -96,7 +96,6 @@ info 'Android TV banners ready.'
 makeIcon() {
     local LOUTPATH="$DST_PATH/$1"
     local LSIZE="$2"
-    local FSIZE="$3"
 
     # make destination path
     mkdir -p "$LOUTPATH"
@@ -105,7 +104,11 @@ makeIcon() {
     magick "$SRC_ICON" -resize $LSIZE! "$LOUTPATH/ic_launcher.png"
 
     # make rect foreground icon
-    magick "$SRC_ICON" -resize $FSIZE! "$LOUTPATH/ic_launcher_foreground.png"
+    if [ $# -ge 4 ]; then
+        local FSIZE="$3"
+        local ESIZE="$4"
+        magick "$SRC_ICON" -resize $FSIZE^ -gravity center -background none -extent $ESIZE "$LOUTPATH/ic_launcher_foreground.png"
+    fi
 
     # make rounded icon
     magick "$LOUTPATH/ic_launcher.png" \( +clone -threshold 101% -fill white -draw 'circle %[fx:int(w/2)],%[fx:int(h/2)] %[fx:int(w/2)],1' \) -channel-fx '| gray=>alpha' "$LOUTPATH/ic_launcher_round.png"
@@ -120,6 +123,7 @@ makeAnyDpi() {
 
     # write adaptive icon xml
     cat <<EOF >"$ANYDPIPATH/$XMLPATH.xml"
+<?xml version="1.0" encoding="utf-8"?>
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@color/ic_launcher_background"/>
     <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
@@ -129,7 +133,7 @@ EOF
 
 makeBackground() {
     local XMLPATH="$1"
-    local ANYDPIPATH="$DST_PATH/values"
+    local ANYDPIPATH="$DST_PATH/colors"
 
     # make destination path
     mkdir -p "$ANYDPIPATH"
@@ -143,11 +147,11 @@ makeBackground() {
 EOF
 }
 
-makeIcon "mipmap-mdpi" "48x48" "108x108"
-makeIcon "mipmap-hdpi" "72x72" "162x162"
-makeIcon "mipmap-xhdpi" "96x96" "216x216"
-makeIcon "mipmap-xxhdpi" "144x144" "324x324"
-makeIcon "mipmap-xxxhdpi" "192x192" "432x432"
+makeIcon "mipmap-mdpi" "48x48" "66x66" "108x108"
+makeIcon "mipmap-hdpi" "72x72" "99x99" "162x162"
+makeIcon "mipmap-xhdpi" "96x96" "132x132" "216x216"
+makeIcon "mipmap-xxhdpi" "144x144" "198x198" "324x324"
+makeIcon "mipmap-xxxhdpi" "192x192" "264x264" "432x432"
 
 makeAnyDpi "ic_launcher"
 makeAnyDpi "ic_launcher_round"
@@ -160,9 +164,5 @@ cat <<EOF
 Add the following lines to your AndroidManifest.xml inside the <application> tag:
     android:icon="@mipmap/ic_launcher"
     android:roundIcon="@mipmap/ic_launcher_round"
-
-Add the following lines to your res/values/styles.xml inside the <style name="AppTheme" parent="..."> tag:
-    <item name="android:roundIcon">@drawable/ic_launcher_round</item>
-    <item name="android:icon">@drawable/ic_launcher</item>
 
 EOF
