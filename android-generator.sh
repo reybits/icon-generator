@@ -1,7 +1,7 @@
 #!/bin/sh
 ###################################
 #
-# App Icon Generator v0.0.1
+# App Icon Generator v0.0.2
 #
 # Andrey A. Ugolnik
 # https://www.ugolnik.info
@@ -58,8 +58,8 @@ if [ $# != 3 ]; then
 fi
 
 makeIconTV() {
-    LOUTPATH="$DST_PATH/$1"
-    LSIZE="$2"
+    local LOUTPATH="$DST_PATH/$1"
+    local LSIZE="$2"
 
     # make destination path
     mkdir -p "$LOUTPATH"
@@ -76,8 +76,8 @@ makeIconTV "mipmap-xxxhdpi" "320x320"
 info 'Android TV icons ready.'
 
 makeBannerTV() {
-    LOUTPATH="$DST_PATH/$1"
-    LSIZE="$2"
+    local LOUTPATH="$DST_PATH/$1"
+    local LSIZE="$2"
 
     # make destination path
     mkdir -p "$LOUTPATH"
@@ -94,22 +94,75 @@ makeBannerTV "mipmap-xxxhdpi" "640x360"
 info 'Android TV banners ready.'
 
 makeIcon() {
-    LOUTPATH="$DST_PATH/$1"
-    LSIZE="$2"
+    local LOUTPATH="$DST_PATH/$1"
+    local LSIZE="$2"
+    local FSIZE="$3"
 
     # make destination path
     mkdir -p "$LOUTPATH"
 
     # make rect icon
-    magick "$SRC_ICON" -resize $LSIZE! "$LOUTPATH/ic_icon.png"
+    magick "$SRC_ICON" -resize $LSIZE! "$LOUTPATH/ic_launcher.png"
+
+    # make rect foreground icon
+    magick "$SRC_ICON" -resize $FSIZE! "$LOUTPATH/ic_launcher_foreground.png"
 
     # make rounded icon
-    magick "$LOUTPATH/ic_icon.png" \( +clone -threshold 101% -fill white -draw 'circle %[fx:int(w/2)],%[fx:int(h/2)] %[fx:int(w/2)],1' \) -channel-fx '| gray=>alpha' "$LOUTPATH/ic_icon_round.png"
+    magick "$LOUTPATH/ic_launcher.png" \( +clone -threshold 101% -fill white -draw 'circle %[fx:int(w/2)],%[fx:int(h/2)] %[fx:int(w/2)],1' \) -channel-fx '| gray=>alpha' "$LOUTPATH/ic_launcher_round.png"
 }
 
-makeIcon "mipmap-mdpi" "48x48"
-makeIcon "mipmap-hdpi" "72x72"
-makeIcon "mipmap-xhdpi" "96x96"
-makeIcon "mipmap-xxhdpi" "144x144"
-makeIcon "mipmap-xxxhdpi" "192x192"
+makeAnyDpi() {
+    local XMLPATH="$1"
+    local ANYDPIPATH="$DST_PATH/mipmap-anydpi-v26"
+
+    # make destination path
+    mkdir -p "$ANYDPIPATH"
+
+    # write adaptive icon xml
+    cat <<EOF >"$ANYDPIPATH/$XMLPATH.xml"
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background"/>
+    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>
+</adaptive-icon>
+EOF
+}
+
+makeBackground() {
+    local XMLPATH="$1"
+    local ANYDPIPATH="$DST_PATH/values"
+
+    # make destination path
+    mkdir -p "$ANYDPIPATH"
+
+    # write adaptive icon xml
+    cat <<EOF >"$ANYDPIPATH/$XMLPATH.xml"
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#000000</color>
+</resources>
+EOF
+}
+
+makeIcon "mipmap-mdpi" "48x48" "108x108"
+makeIcon "mipmap-hdpi" "72x72" "162x162"
+makeIcon "mipmap-xhdpi" "96x96" "216x216"
+makeIcon "mipmap-xxhdpi" "144x144" "324x324"
+makeIcon "mipmap-xxxhdpi" "192x192" "432x432"
+
+makeAnyDpi "ic_launcher"
+makeAnyDpi "ic_launcher_round"
+makeBackground "ic_launcher_background"
+
 info 'Android icons ready.'
+
+cat <<EOF
+
+Add the following lines to your AndroidManifest.xml inside the <application> tag:
+    android:icon="@mipmap/ic_launcher"
+    android:roundIcon="@mipmap/ic_launcher_round"
+
+Add the following lines to your res/values/styles.xml inside the <style name="AppTheme" parent="..."> tag:
+    <item name="android:roundIcon">@drawable/ic_launcher_round</item>
+    <item name="android:icon">@drawable/ic_launcher</item>
+
+EOF
